@@ -9,13 +9,18 @@ from forms import CartForm, UserForm
 from app import app
 
 
-@app.route('/')
-def main():
-    categories = db.session.query(Category).all()
+def make_dish_list():
     dish_list = [db.session.query(Dish).get(i) for i in session.get('cart', [])]
     amount = 0
     for dish in dish_list:
         amount += dish.price
+    return dish_list, amount
+
+
+@app.route('/')
+def main():
+    categories = db.session.query(Category).all()
+    dish_list, amount = make_dish_list()
     return render_template('main.html',
                            categories=categories,
                            amount=amount,
@@ -29,24 +34,21 @@ def cart():
         is_del = True
         session['delete'] = False
     form = CartForm()
-    dish_list = [db.session.query(Dish).get(i) for i in session.get('cart', [])]
-    amount = 0
-    for dish in dish_list:
-        amount += dish.price
+    dish_list, amount = make_dish_list()
     if request.method == 'POST':
         name = form.name.data
         address = form.address.data
         email = form.user_mail.data
         phone = form.phone.data
         date = datetime.date.today().strftime("%d.%m.%Y")
-        status = "Выполняется"
+        status = "В исполнении"
         order_form = Order(address=address,
                            name=name,
                            phone=phone,
                            date=date,
                            amount=amount,
                            status=status,
-                           user_email=email
+                           user_id=email
                            )
         for dish in dish_list:
             order_form.dishes.append(dish)
@@ -79,15 +81,18 @@ def auth():
 @app.route('/register/')
 def register():
     form = UserForm()
+    dish_list, amount = make_dish_list()
     if request.method == 'POST' and form.validate_on_submit():
-        name = form.name.data
         email = form.mail.data
         password = form.password.data
-        user = User(name=name, mail=email, password_hash=generate_password_hash(password))
+        user = User(mail=email, password_hash=generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
         return redirect('/auth/')
-    return render_template('login.html', form=form)
+    return render_template('register.html',
+                           form=form,
+                           amount=amount,
+                           len=len(dish_list))
 
 
 @app.route('/logout/')

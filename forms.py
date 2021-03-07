@@ -16,8 +16,8 @@ class UserForm(FlaskForm):
                                 Length(min=2, message='Поле должно содержать минимум два символа')])
     mail = StringField('mail', [Email(message='Неверные данные')])
     password = PasswordField('password', validators=[
-                            InputRequired(message='Введите пароль'),
+                            DataRequired(),
                             Length(min=5, message='Пароль должен быть не менее 5 символов'),
                             EqualTo('confirm_password', message="Пароли не одинаковые")]
                             )
-    confirm_password = PasswordField('confirm_password', InputRequired(message='Повторите пароль'))
+    confirm_password = PasswordField('confirm_password', [InputRequired(message='Повторите пароль')])

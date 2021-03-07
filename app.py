@@ -12,8 +12,8 @@ csrf = CSRFProtect(app)
 
 migrate = Migrate(app, db)
 
-
 from views import *
+
 
 if __name__ == "__main__":
     app.run()
