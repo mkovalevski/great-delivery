@@ -12,13 +12,14 @@
             <h1 class="h3 mb-3 font-weight-normal">Great delivery</h1>
             <p class="h5 font-weight-light">Регистрация</p>
           </div>
+          <p class="alert-warning">{{ error_msg }}</p>
           <div class="form-label-group">
             <p class="text-muted">Электропочта</p>
             {% for err in form.mail.errors %}
               <p class="alert-warning">{{ err }}</p>
             {% endfor %}
             {{  form.mail(class = "form-control") }}
-            <label for="inputMail"></label>
+
           </div>
           <div class="form-label-group">
             <p class="text-muted">Пароль</p>
@@ -26,13 +27,13 @@
               <p class="alert-warning">{{ err }}</p>
             {% endfor %}
             {{ form.password(class = "form-control") }}
-            <label for="inputPassword"></label>
+
           </div>
           <div class="form-label-group">
             <p class="text-muted">Пароль еще раз</p>
 
             {{ form.confirm_password(class = "form-control") }}
-            <label for="inputConfirm"></label>
+
           </div>
           <div class="checkbox mb-3"></div>
           <button class="btn btn-lg btn-danger btn-block" type="submit">Войти</button>

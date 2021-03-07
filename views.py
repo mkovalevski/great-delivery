@@ -5,7 +5,7 @@ from flask import abort, flash, session, redirect, request, render_template, url
 from werkzeug.security import generate_password_hash
 
 from models import db, Category, User, Dish, Order
-from forms import CartForm, UserForm
+from forms import CartForm, UserForm, AuthForm
 from app import app
 
 
@@ -24,10 +24,11 @@ def main():
     return render_template('main.html',
                            categories=categories,
                            amount=amount,
-                           len=len(dish_list))
+                           len=len(dish_list),
+                           is_auth=session.get('is_auth', False))
 
 
-@app.route('/cart/')
+@app.route('/cart/', methods=['GET', 'POST'])
 def cart():
     is_del = False
     if session.get('delete'):
@@ -42,13 +43,15 @@ def cart():
         phone = form.phone.data
         date = datetime.date.today().strftime("%d.%m.%Y")
         status = "В исполнении"
+
         order_form = Order(address=address,
                            name=name,
                            phone=phone,
                            date=date,
+                           mail=email,
                            amount=amount,
                            status=status,
-                           user_id=email
+                           user_id=session['user_id']
                            )
         for dish in dish_list:
             order_form.dishes.append(dish)
@@ -70,21 +73,62 @@ def cart():
 
 @app.route('/account/')
 def account():
-    return render_template('account.html')
+    dish_list, amount = make_dish_list()
+    if session['is_auth']:
+        user = db.session.query(User).get(session['user_id'])
+        orders = user.orders
+        for order in orders:
+            print(order.dishes)
+        return render_template('account.html',
+                               orders=orders,
+                               db=db,
+                               Dish=Dish,
+                               amount=amount,
+                               len=len(dish_list))
+    return redirect('/auth/')
 
 
-@app.route('/auth/')
+@app.route('/auth/', methods=['GET', 'POST'])
 def auth():
-    return render_template('login.html')
+    dish_list, amount = make_dish_list()
+    if session.get('user_id'):
+        return redirect('/account/')
+    else:
+        form = AuthForm()
+        if request.method == 'POST':
+            user = db.session.query(User).filter(User.mail == form.mail.data).first()
+            if user and user.password_valid(form.password.data):
+                session['user_id'] = user.id
+                session['is_auth'] = True
+                return redirect('/account/')
+            else:
+                err = 'Неверный e-mail или пароль'
+                return render_template('auth.html',
+                                       form=form,
+                                       amount=amount,
+                                       len=len(dish_list),
+                                       error_msg=err)
+        return render_template("auth.html",
+                               form=form,
+                               len=len(dish_list),
+                               amount=amount)
 
 
-@app.route('/register/')
+@app.route('/register/', methods=['GET', 'POST'])
 def register():
     form = UserForm()
     dish_list, amount = make_dish_list()
     if request.method == 'POST' and form.validate_on_submit():
         email = form.mail.data
         password = form.password.data
+        user_exists = User.query.filter_by(mail=email).first()
+        if user_exists:
+            error_msg = 'Пользователь существует'
+            return render_template("register.html",
+                                   form=form,
+                                   amount=amount,
+                                   len=len(dish_list),
+                                   error_msg=error_msg)
         user = User(mail=email, password_hash=generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
@@ -97,7 +141,10 @@ def register():
 
 @app.route('/logout/')
 def login():
-    return render_template('login.html')
+    if session.get('user_id'):
+        session.pop('user_id')
+        session['is_auth'] = False
+    return redirect('/auth/')
 
 
 @app.route('/ordered/')
