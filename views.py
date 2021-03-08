@@ -181,10 +181,13 @@ def add_to_cart(dish_id):
 @app.route('/delete_from_cart/<int:dish_id>/')
 def delete_from_cart(dish_id):
     cart = session.get('cart', [])
-    cart.remove(dish_id)
-    session['cart'] = cart
-    session['delete'] = True
-    return redirect('/cart/')
+    if dish_id in cart:
+        cart.remove(dish_id)
+        session['cart'] = cart
+        session['delete'] = True
+        return redirect('/cart/')
+    else:
+        return "Not Found", 404
 
 
 @app.errorhandler(404)
