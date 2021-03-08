@@ -163,7 +163,7 @@ def login():
 
 @app.route('/ordered/')
 def order():
-    return render_template('ordered.html')
+    return render_template('ordered.html', is_auth=session.get('is_auth', False))
 
 
 @app.route('/add_to_cart/<int:dish_id>/')

@@ -7,12 +7,15 @@ class CartForm(FlaskForm):
     name = StringField('name', [InputRequired(message='Введите имя'),
                                 Length(min=2, message='Имя должно содержать минимум 2 символа')])
     address = StringField('address', [InputRequired(message='Введите адрес')])
-    user_mail = StringField('mail', [Email(message='Неверные данные')])
-    phone = StringField('phone', [Length(min=7, message='Неверный телефон')])
+    user_mail = StringField('mail', [InputRequired(message='Введите e-mail'),
+                                     Email(message='Неверные данные')])
+    phone = StringField('phone', [InputRequired(message='Введите телефон'),
+                                  Length(min=7, message='Неверный телефон')])
 
 
 class UserForm(FlaskForm):
-    mail = StringField('mail', [InputRequired(message='Введите e-mail'), Email(message='Неверно введен e-mail')])
+    mail = StringField('mail', [InputRequired(message='Введите e-mail'),
+                                Email(message='Неверно введен e-mail')])
     password = PasswordField('password', validators=[
                             DataRequired(),
                             Length(min=5, message='Пароль должен быть не менее 5 символов'),
@@ -22,5 +25,6 @@ class UserForm(FlaskForm):
 
 
 class AuthForm(FlaskForm):
-    mail = StringField('mail', [InputRequired(message='Введите e-mail'), Email(message='Неверно введен e-mail')])
+    mail = StringField('mail', [InputRequired(message='Введите e-mail'),
+                                Email(message='Неверно введен e-mail')])
     password = PasswordField('password', )
