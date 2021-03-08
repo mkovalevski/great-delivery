@@ -17,7 +17,6 @@ def make_dish_list():
 
 
 def binary_search(_list, value):
-    print(len(_list))
     mid = len(_list) // 2
     low = 0
     high = len(_list) - 1
@@ -28,10 +27,8 @@ def binary_search(_list, value):
             high = mid - 1
         mid = (low + high) // 2
     if low > high:
-        print("No value")
         return False
     else:
-        print("ID =", mid)
         return True
 
 
@@ -172,7 +169,6 @@ def order():
 @app.route('/add_to_cart/<int:dish_id>/')
 def add_to_cart(dish_id):
     dishes = db.session.query(Dish).all()
-    print("Длина", len(dishes))
     if binary_search(dishes, dish_id):
         cart = session.get('cart', [])
     else:
