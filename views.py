@@ -1,7 +1,6 @@
 import datetime
-from functools import wraps
 
-from flask import abort, flash, session, redirect, request, render_template, url_for
+from flask import session, redirect, request, render_template
 from werkzeug.security import generate_password_hash
 
 from models import db, Category, User, Dish, Order
@@ -10,11 +9,30 @@ from app import app
 
 
 def make_dish_list():
-    dish_list = [db.session.query(Dish).get(i) for i in session.get('cart', [])]
+    dish_list = [db.session.query(Dish).get_or_404(i) for i in session.get('cart', [])]
     amount = 0
     for dish in dish_list:
         amount += dish.price
     return dish_list, amount
+
+
+def binary_search(_list, value):
+    print(len(_list))
+    mid = len(_list) // 2
+    low = 0
+    high = len(_list) - 1
+    while _list[mid].id != value and low <= high:
+        if value > _list[mid].id:
+            low = mid + 1
+        else:
+            high = mid - 1
+        mid = (low + high) // 2
+    if low > high:
+        print("No value")
+        return False
+    else:
+        print("ID =", mid)
+        return True
 
 
 @app.route('/')
@@ -75,16 +93,15 @@ def cart():
 def account():
     dish_list, amount = make_dish_list()
     if session['is_auth']:
-        user = db.session.query(User).get(session['user_id'])
+        user = db.session.query(User).get_or_404(session['user_id'])
         orders = user.orders
-        for order in orders:
-            print(order.dishes)
         return render_template('account.html',
                                orders=orders,
                                db=db,
                                Dish=Dish,
                                amount=amount,
-                               len=len(dish_list))
+                               len=len(dish_list),
+                               is_auth=session.get('is_auth', False))
     return redirect('/auth/')
 
 
@@ -154,10 +171,15 @@ def order():
 
 @app.route('/add_to_cart/<int:dish_id>/')
 def add_to_cart(dish_id):
-    cart = session.get('cart', [])
+    dishes = db.session.query(Dish).all()
+    print("Длина", len(dishes))
+    if binary_search(dishes, dish_id):
+        cart = session.get('cart', [])
+    else:
+        return "Not Found", 404
     cart.append(dish_id)
     session['cart'] = cart
-    return redirect(url_for('cart'))
+    return redirect('/')
 
 
 @app.route('/delete_from_cart/<int:dish_id>/')
